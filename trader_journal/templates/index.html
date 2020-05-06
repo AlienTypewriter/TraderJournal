@@ -1,0 +1,11 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Trader Journal Dashboard</h1>
+  <p>Welcome to Trader Journal, a website developed by <em>Ivan Vasyliv</em>!</p>
+  <p>Your stats:</p>
+  <ul>
+    <li><strong>Total operations:</strong> {{ num_ops }}</li>
+    <li><strong>Current period:</strong> {{ period_desc }}</li>
+  </ul>
+{% endblock %}

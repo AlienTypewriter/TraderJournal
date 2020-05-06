@@ -1,3 +1,7 @@
 from django.contrib import admin
+from . import models
 
-# Register your models here.
+admin.site.register(models.Active)
+admin.site.register(models.Operation)
+admin.site.register(models.Period)
+admin.site.register(models.Profile)
