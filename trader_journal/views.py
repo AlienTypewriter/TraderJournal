@@ -8,12 +8,12 @@ def index(request):
     user = request.user
     num_ops = 0
     period_desc = 'No current period'
-    if user.is_authenticated:
-        num_ops = user.operation_set.count()
-        periods = user.period_set.all()
-        for period in periods:
-            if period.is_current():
-                period_desc = str(period)
+    num_ops = user.operation_set.count()
+    periods = user.period_set.all()
+    for period in periods:
+        if period.is_current():
+            period_desc = str(period)
+            break
     
     context = {
         'num_ops': num_ops,

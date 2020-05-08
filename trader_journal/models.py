@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import date
+from . import conv
 
 
 class Profile(models.Model):
@@ -33,10 +34,11 @@ class Active(models.Model):
     
 class Operation(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateField(default=timezone.now)
-    currency = models.CharField(max_length=5)
+    datetime = models.DateTimeField(default=timezone.now,verbose_name='Date and time at which the operation was closed')
+    currency_bought = models.CharField(max_length=10)
+    currency_sold = models.CharField(max_length=10)
+    exchange_name = models.CharField(max_length=30)
     amount = models.DecimalField(max_digits=16,decimal_places=8)
-    current_price = models.DecimalField(max_digits=9,decimal_places=4)
     eventual_price = models.DecimalField(max_digits=9,decimal_places=4,null=True,default=None)
     is_buy = models.BooleanField()
     is_maker = models.BooleanField()
@@ -48,6 +50,18 @@ class Operation(models.Model):
             return p
         else:
             return None
+
+    def get_price(self):
+        query = ''
+        if self.is_buy:
+            query = f'/exchangerate/{self.currency_sold}/{self.currency_bought}'
+        else:
+            query = f'/exchangerate/{self.currency_bought}/{self.currency_sold}'
+        query+=f'/?time={self.datetime.isoformat(timespec="microseconds")[:-6]}0Z'
+        return conv.get_from_api(query).get('rate')
+
+    def __str__(self):
+        return f'{self.get_price()} of {self.currency_sold} traded for {self.currency_bought}'
     
 class Period(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -69,4 +83,4 @@ class Period(models.Model):
         return False
 
     def __str__(self):
-        return 'Started at: '+str(self.date_start)+', ends (or ended) at: '+str(self.date_end)    
+        return f'Started at: {str(self.date_start)}, ends (or ended) at: {str(self.date_end)}' 
