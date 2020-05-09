@@ -17,9 +17,11 @@
           <li><a href="{% url 'trader_journal:index' %}">Home</a></li>
           {% if user.is_authenticated %}
           <li>User: {{ user.get_username }}</li>
+          <li><a href="{% url 'trader_journal:profile' %}?next={{request.path}}">Profile</a></li>  
           <li><a href="{% url 'trader_journal:logout' %}?next={{request.path}}">Logout</a></li>   
           {% else %}
           <li><a href="{% url 'trader_journal:login' %}?next={{request.path}}">Login</a></li>   
+          <li><a href="{% url 'trader_journal:register' %}?next={{request.path}}">Register</a></li>   
           {% endif %} 
         </ul>
      {% endblock %}

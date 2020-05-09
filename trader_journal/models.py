@@ -29,18 +29,23 @@ class Active(models.Model):
     currency = models.CharField(max_length=5)
     amount = models.DecimalField(max_digits=16,decimal_places=8)
 
+    def get_in_usd(self):
+        query = f'/exchangerate/{self.currency}/USD'
+        return conv.get_from_api(query).get('rate')*self.amount
+
     def __str__(self):
         return str(self.currency)+': '+self.amount
     
 class Operation(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     datetime = models.DateTimeField(default=timezone.now,verbose_name='Date and time at which the operation was closed')
-    currency_bought = models.CharField(max_length=10)
-    currency_sold = models.CharField(max_length=10)
+    currency_bought = models.CharField(max_length=20)
+    currency_sold = models.CharField(max_length=20)
     exchange_name = models.CharField(max_length=30)
-    amount = models.DecimalField(max_digits=16,decimal_places=8)
-    eventual_price = models.DecimalField(max_digits=9,decimal_places=4,null=True,default=None)
-    is_buy = models.BooleanField()
+    amount_bought = models.DecimalField(max_digits=16,decimal_places=8)
+    comission_percentage = models.DecimalField(max_digits=5,decimal_places=3)
+    buy_rate = models.DecimalField(max_digits=9,decimal_places=4)
+    eventual_rate = models.DecimalField(max_digits=9,decimal_places=4,null=True,default=None)
     is_maker = models.BooleanField()
     is_open = models.BooleanField(default=True)
     
@@ -51,13 +56,9 @@ class Operation(models.Model):
         else:
             return None
 
-    def get_price(self):
-        query = ''
-        if self.is_buy:
-            query = f'/exchangerate/{self.currency_sold}/{self.currency_bought}'
-        else:
-            query = f'/exchangerate/{self.currency_bought}/{self.currency_sold}'
-        query+=f'/?time={self.datetime.isoformat(timespec="microseconds")[:-6]}0Z'
+    def get_rate(self):
+        query = f'/exchangerate/{self.currency_bought}/{self.currency_sold}'
+        query+= f'/?time={self.datetime.isoformat(timespec="microseconds")[:-6]}0Z'
         return conv.get_from_api(query).get('rate')
 
     def __str__(self):
