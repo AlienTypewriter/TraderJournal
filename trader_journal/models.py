@@ -43,7 +43,7 @@ class Operation(models.Model):
     currency_sold = models.CharField(max_length=20)
     exchange_name = models.CharField(max_length=30)
     amount_bought = models.DecimalField(max_digits=16,decimal_places=8)
-    comission_percentage = models.DecimalField(max_digits=5,decimal_places=3)
+    commission_percentage = models.DecimalField(max_digits=5,decimal_places=3)
     buy_rate = models.DecimalField(max_digits=9,decimal_places=4)
     eventual_rate = models.DecimalField(max_digits=9,decimal_places=4,null=True,default=None)
     is_maker = models.BooleanField()

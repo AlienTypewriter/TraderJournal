@@ -69,13 +69,83 @@ def profile(request):
         'user_form': user_form
     })
 
-class PeriodCreate(CreateView):
-    model = models.Period
-    fields = '__all__'
+@login_required
+@transaction.atomic
+def add_operation(request):
+    if request.method == 'POST':
+        op_form = forms.OperationForm(request.POST, instance=request.user)
+        if op_form.is_valid():
+            operation = op_form.save(commit=False)
+            operation.user_id = request.user
+            operation.save()
+            messages.success(request, _('Operation saved!'))
+            return redirect('trader_journal:index')
+        else:
+            messages.error(request, _('Please correct the error below.'))
+    else:
+        op_form = forms.OperationForm(instance=request.user)
+    return render(request, 'operation_add.html', {
+        'op_form': op_form
+    })
+
+class OperationUpdate(UpdateView):
+    model = models.Operation
+    fields = ['datetime','currency_bought','currency_sold','exchange_name','amount_bought',
+    'commission_percentage','buy_rate','is_maker','is_open']
+
+class OperationDelete(DeleteView):
+    model = models.Operation
+    success_url = reverse_lazy('operation')
+
+@login_required
+@transaction.atomic
+def add_active(request):
+    if request.method == 'POST':
+        act_form = forms.ActiveForm(request.POST, instance=request.user)
+        if act_form.is_valid():
+            active = act_form.save(commit=False)
+            active.user_id = request.user
+            active.save()
+            messages.success(request, _('Active saved!'))
+            return redirect('trader_journal:index')
+        else:
+            messages.error(request, _('Please correct the error below.'))
+    else:
+        act_form = forms.ActiveForm(instance=request.user)
+    return render(request, 'operation_add.html', {
+        'act_form': act_form
+    })
+
+class ActiveUpdate(UpdateView):
+    model = models.Active
+    fields = ['currency','amount']
+
+class ActiveDelete(DeleteView):
+    model = models.Active
+    success_url = reverse_lazy('active')
+
+@login_required
+@transaction.atomic
+def add_period(request):
+    if request.method == 'POST':
+        per_form = forms.PeriodForm(request.POST, instance=request.user)
+        if per_form.is_valid():
+            period = per_form.save(commit=False)
+            period.user_id = request.user
+            period.save()
+            messages.success(request, _('Period saved!'))
+            return redirect('trader_journal:index')
+        else:
+            messages.error(request, _('Please correct the error below.'))
+    else:
+        act_form = forms.ActiveForm(instance=request.user)
+    return render(request, 'operation_add.html', {
+        'act_form': act_form
+    })
 
 class PeriodUpdate(UpdateView):
-    model = models.Period
-    fields = '__all__'
+    model = models.Active
+    fields = ['date_start','date_end','max_acts','acts_window','max_freq','max_simultaneous','use_shoulder']
 
 class PeriodDelete(DeleteView):
     model = models.Period
