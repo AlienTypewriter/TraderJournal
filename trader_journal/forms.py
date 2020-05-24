@@ -61,6 +61,12 @@ class OperationForm(forms.ModelForm):
         if data<=0 :
             raise ValidationError(_('Cannot buy a negative amount of a currency'))
         return data
+
+    def amount_sold(self):
+        data = self.cleaned_data['amount_sold']
+        if data<=0 :
+            raise ValidationError(_('Cannot sell a negative amount of a currency'))
+        return data
     
     def clean_comission_percentage(self):
         data = self.cleaned_data['commission_percentage']
@@ -68,21 +74,14 @@ class OperationForm(forms.ModelForm):
             raise ValidationError(_('Not a valid percentage'))
         return data
 
-    def clean_buy_rate(self):
-        data = self.cleaned_data['buy_rate']
-        if data<=0:
-            raise ValidationError(_('Buy rate cannot be 0 or below'))
-        return data
-
     class Meta:
         model = models.Operation
-        fields = ('datetime','currency_bought','currency_sold','amount_bought','exchange_name','commission_percentage',
-        'buy_rate','is_maker','is_open')
-        labels = {'currency_bought': _('Enter currency id'),'currency_sold': _('Enter currency id'),
-        'amount':_('Enter the amount of currency you received')}
+        fields = ('datetime','currency_bought','currency_sold','amount_bought','amount_sold','exchange_name','commission_percentage','is_maker','is_open')
+        labels = {'currency_bought': _('Enter bought currency id'),'currency_sold': _('Enter spent currency id'),
+        'amount_bought':_('Enter the amount of currency you received'),
+        'amount_sold':_('Enter the amount of currency you spent')}
         help_texts = {'currency_bought': _('The currency id must be integreated into CoinAPI'),
-        'currency_sold': _('The currency id must be integreated into CoinAPI'),
-        'buy_rate':_('How much one unit of currency bought costs compared to currency sold, i. e. 9800 for BTC/USD')}
+        'currency_sold': _('The currency id must be integreated into CoinAPI')}
 
 class PeriodForm(forms.ModelForm):
     def clean_max_acts(self):
@@ -97,24 +96,24 @@ class PeriodForm(forms.ModelForm):
             raise ValidationError(_('Not a valid amount of total operations'))
         return data
 
-    def clean_max_simultenous(self):
-        data = self.cleaned_data['max_simultenous']
+    def clean_max_simultaneous(self):
+        data = self.cleaned_data['max_simultaneous']
         if data<=0:
             raise ValidationError(_('Not a valid amount of open operations'))
         return data
 
     class Meta:
         model = models.Period
-        fields = ('date_start','date_end','max_acts','acts_window','max_freq','max_simultenous','use_shoulder')
+        fields = ('date_start','date_end','max_acts','acts_window','max_freq','max_simultaneous','use_shoulder')
         labels = {'max_acts': _('Max actives'),
         'acts_window': _('Reset period'),
         'max_freq':_('Max in period'),
-        'max_simultenous':_('Max simultenously open'),
+        'max_simultaneous':_('Max simultaneously open'),
         'use_shoulder':_('Use of shoulder')}
         help_texts = {'max_acts': _('How many actives will you own during the period'),
         'acts_window': _('How frequently does the total operation limit reset'),
         'max_freq':_('Limit on total operations in the period'),
-        'max_simultenous':_('Limit on open operations in the period'),
+        'max_simultaneous':_('Limit on open operations in the period'),
         'use_shoulder':_('Whether the use of shoulder is allowed')}
 
     

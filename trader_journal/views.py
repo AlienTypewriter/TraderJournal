@@ -17,19 +17,12 @@ def index(request):
     """View function for home page of site."""
     user = request.user
     num_ops = 0
-    cur_period = None
-    period_exists = False
+    cur_period = models.get_current_period()
     num_ops = user.operation_set.count()
     periods = user.period_set.all()
     actives = user.active_set.all()
-    for period in periods:
-        if period.is_current():
-            cur_period = period
-            period_exists = True
-            break
     context = {
         'num_ops': num_ops,
-        'period_exists': period_exists,
         'cur_period': cur_period,
         'actives':actives
     }
@@ -82,22 +75,23 @@ def add_operation(request):
             operation = op_form.save(commit=False)
             operation.user_id = request.user
             period = operation.get_period()
-            all_ops = models.Operation.objects.filter(datetime__gte=period.date_start, datetime__lte=period.date_end)
-            if operation.is_open:
-                open_ops = all_ops & models.Operation.objects.filter(is_open=True)
-                if len(open_ops)>=period.max_simultaneous:
-                    messages.warning(request, _('Open deal limit for period reached!'))
+            if period is not None:
+                all_ops = models.Operation.objects.filter(datetime__gte=period.date_start, datetime__lte=period.date_end)
+                if operation.is_open:
+                    open_ops = all_ops & models.Operation.objects.filter(is_open=True)
+                    if len(open_ops)>=period.max_simultaneous:
+                        messages.warning(request, _('Open deal limit for period reached!'))
+                        period.limit_exceeded = True
+                if period.acts_window=='D':
+                    all_ops = all_ops & models.Operation.objects.filter(datetime__day=operation.datetime.day)
+                elif period.acts_window == 'W':
+                    all_ops = all_ops & models.Operation.objects.filter(datetime__week=operation.datetime.week)
+                else:
+                    all_ops = all_ops & models.Operation.objects.filter(datetime__month=operation.datetime.month)
+                if len(all_ops)>=period.max_freq:
+                    messages.warning(request, _('Operation limit for period reached!'))
                     period.limit_exceeded = True
-            if period.acts_window=='D':
-                all_ops = all_ops & models.Operation.objects.filter(datetime__day=operation.datetime.day)
-            elif period.acts_window == 'W':
-                all_ops = all_ops & models.Operation.objects.filter(datetime__week=operation.datetime.week)
-            else:
-                all_ops = all_ops & models.Operation.objects.filter(datetime__month=operation.datetime.month)
-            if len(all_ops)>=period.max_freq:
-                messages.warning(request, _('Operation limit for period reached!'))
-                period.limit_exceeded = True
-                period.save()
+                    period.save()
             operation.save()
             messages.success(request, _('Operation saved!'))
             return redirect('trader_journal:index')
@@ -105,36 +99,29 @@ def add_operation(request):
             messages.error(request, _('Please correct the error below.'))
     else:
         op_form = forms.OperationForm()
-    return render(request, 'operation_form.html', {
+    return render(request, 'trader_journal/operation_form.html', {
         'form': op_form
     })
 
 class UserDetailView(generic.DetailView):
     def get_object(self, queryset=None):
-        obj = super(PeriodUpdate,self).get_object()
+        obj = super(UserDetailView,self).get_object()
         if not obj.user_id==self.request.user:
             raise Http404
         else:
             return obj
-
-class UserListView(generic.ListView):
-    def get_queryset(self):
-        if self.request.user.is_anonymous:
-            raise Http404
-        else:
-            return models.Active.objects.filter(user_id=self.request.user)
 
 class UserUpdateView(generic.UpdateView):
     def get_object(self, queryset=None):
-        obj = super(PeriodUpdate,self).get_object()
+        obj = super(UserUpdateView,self).get_object()
         if not obj.user_id==self.request.user:
             raise Http404
         else:
             return obj
 
-class UserDeleteView(generic.UpdateView):
+class UserDeleteView(generic.DeleteView):
     def get_object(self, queryset=None):
-        obj = super(PeriodUpdate,self).get_object()
+        obj = super(UserDeleteView,self).get_object()
         if not obj.user_id==self.request.user:
             raise Http404
         else:
@@ -145,16 +132,21 @@ class OperationDetailView(UserDetailView):
 
 class OperationListView(generic.ListView):
     model = models.Operation
+    
+    def get_queryset(self):
+        if self.request.user.is_anonymous:
+            raise Http404
+        else:
+            return self.request.user.operation_set.all()
 
 class OperationUpdate(UserUpdateView):
     model = models.Operation
     fields = ['datetime','currency_bought','currency_sold','exchange_name','amount_bought',
-    'commission_percentage','buy_rate','is_maker','is_open']
+    'amount_sold','commission_percentage','is_maker','is_open']
 
-@login_required
 class OperationDelete(UserDeleteView):
     model = models.Operation
-    success_url = reverse_lazy('operation')
+    success_url = reverse_lazy('trader_journal:operations')
 
 @login_required
 @transaction.atomic
@@ -174,15 +166,21 @@ def add_active(request):
             messages.error(request, _('Please correct the error below.'))
     else:
         act_form = forms.ActiveForm()
-    return render(request, 'active_form.html', {
+    return render(request, 'trader_journal/active_form.html', {
         'form': act_form
     })
 
 class ActiveDetailView(UserDetailView):
     model = models.Active
 
-class ActiveListView(UserListView):
+class ActiveListView(generic.ListView):
     model = models.Active
+
+    def get_queryset(self):
+        if self.request.user.is_anonymous:
+            raise Http404
+        else:
+            return self.request.user.active_set.all()
 
 class ActiveUpdate(UserUpdateView):
     model = models.Active
@@ -190,7 +188,7 @@ class ActiveUpdate(UserUpdateView):
 
 class ActiveDelete(UserDeleteView):
     model = models.Active
-    success_url = reverse_lazy('active')
+    success_url = reverse_lazy('trader_journal:actives')
 
 @login_required
 @transaction.atomic
@@ -211,15 +209,21 @@ def add_period(request):
             messages.error(request, _('Please correct the error below.'))
     else:
         per_form = forms.PeriodForm()
-    return render(request, 'period_form.html', {
+    return render(request, 'trader_journal/period_form.html', {
         'form': per_form
     })
 
 class PeriodDetailView(UserDetailView):
     model = models.Period
 
-class PeriodListView(UserListView):
+class PeriodListView(generic.ListView):
     model = models.Period
+
+    def get_queryset(self):
+        if self.request.user.is_anonymous:
+            raise Http404
+        else:
+            return self.request.user.period_set.all()
 
 class PeriodUpdate(UpdateView):
     model = models.Active
@@ -227,4 +231,4 @@ class PeriodUpdate(UpdateView):
 
 class PeriodDelete(DeleteView):
     model = models.Period
-    success_url = reverse_lazy('period')
+    success_url = reverse_lazy('trader_journal:periods')

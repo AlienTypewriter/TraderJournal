@@ -12,5 +12,6 @@
   </ul>
   {% else %}
     <p>You haven't yet put in any info about your operations.</p>
-  {% endif %}       
+  {% endif %}
+  <a href='{% url 'trader_journal:operation_create' %}'><p>Add new operations.</p></a>      
 {% endblock %}

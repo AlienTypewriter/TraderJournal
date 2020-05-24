@@ -6,7 +6,7 @@
   <p>Your stats:</p>
   <ul>
     <li><strong>Total operations:</strong> {{ num_ops }}</li>
-    {% if period_exists %}
+    {% if cur_period is not None %}
     <li><strong>Current period:</strong> {{ cur_period }}</li>
     {% else %}
     <li>Currently not in a period</li>

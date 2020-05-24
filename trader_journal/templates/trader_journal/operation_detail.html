@@ -1,0 +1,17 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h2>Operation that happened at: {{ operation.datetime }}</h2>
+  <p><strong>Bought:</strong> {{ operation.amount_bought }} {{operation.currency_bought }} </a></p>
+  <p><strong>For:</strong> {{ operation.amount_sold }} {{operation.currency_sold}}</p>
+  <p>At the <strong>{{ operation.exchange_name }}</strong> exchange.</p> 
+  <p><strong>The rate at the time of the operation:</strong> {{ operation.buy_rate }}</p>
+  {% if operation.eventual_rate is not None %}
+  <p><strong>The eventual rate of the operation:</strong> {{ operation.eventual_rate }}</p>
+  <p><strong>Profit: </strong> {{operation.get_profit }}$</p>
+  {% endif %}
+  <p><strong>Were you the maker of the operation: </strong> {{ operation.is_maker }}</p>
+  <p><strong>Is it still open: </strong> {{ operation.is_open }}</p>
+  <a href='{% url 'trader_journal:operation_update' operation.pk %}'><h4>Update operation info.</h4></a>
+  <a href='{% url 'trader_journal:operation_delete' operation.pk %}'><h4>Delete this operation.</h4></a>
+{% endblock %}

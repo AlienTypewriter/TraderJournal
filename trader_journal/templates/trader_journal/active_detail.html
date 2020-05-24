@@ -1,0 +1,9 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h2>You own {{ active.amount }} of {{ active.currency }}.</h2>
+  <p>It's equivalent to <strong>${{active.get_in_usd}}</strong> at the moment</p>
+  <br/>
+  <a href='{% url 'trader_journal:active_update' active.pk %}'><h4>Update active info.</h4></a>
+  <a href='{% url 'trader_journal:active_delete' active.pk %}'><h4>Delete this active.</h4></a>
+{% endblock %}

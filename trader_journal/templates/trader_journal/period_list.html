@@ -12,5 +12,6 @@
   </ul>
   {% else %}
     <p>You haven't created any periods as of yet.</p>
-  {% endif %}       
+  {% endif %}
+  <a href='{% url 'trader_journal:period_create'%}'><p>Create a new period.</p></a>       
 {% endblock %}
