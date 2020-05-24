@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Operation List</h1>
+  {% if operation_list %}
+  <ul>
+    {% for operation in operation_list %}
+      <li>
+        <a href="{{ operation.get_absolute_url }}">{{ operation }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>You haven't yet put in any info about your operations.</p>
+  {% endif %}       
+{% endblock %}

@@ -7,23 +7,15 @@ from django.utils.translation import gettext_lazy as _
 
 from . import models, conv
 
+class RegisterForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
+
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('username', 'email')
-
-class ProfileForm(forms.ModelForm):
-    def clean_init_deposit(self):
-        data = self.cleaned_data['init_deposit']
-        if data < 0:
-            raise ValidationError(_('Insufficient amount'))
-        return data
-
-    class Meta:
-        model = models.Profile
-        fields = ('init_deposit',)
-        labels = {'init_deposit': _('Enter initial deposit')}
-        help_texts = {'init_deposit': _('Enter the amount of fiat initially deposited into the exchange in USD')}
 
 class ActiveForm(forms.ModelForm):
     def clean_amount(self):
@@ -40,7 +32,7 @@ class ActiveForm(forms.ModelForm):
 
     class Meta:
         model = models.Active
-        fields = ('currency','amount')
+        fields = ('currency','amount','is_initial')
         labels = {'currency': _('Enter currency id'),'amount':_('Enter the amount of currency')}
         help_texts = {'currency': _('The currency id must be integreated into CoinAPI')}
 
@@ -71,7 +63,7 @@ class OperationForm(forms.ModelForm):
         return data
     
     def clean_comission_percentage(self):
-        data = self.cleaned_data['comission_percentage']
+        data = self.cleaned_data['commission_percentage']
         if data<=0 or data>=100:
             raise ValidationError(_('Not a valid percentage'))
         return data
@@ -84,12 +76,45 @@ class OperationForm(forms.ModelForm):
 
     class Meta:
         model = models.Operation
-        fields = ('datetime','currency_bought','currency_sold','amount_bought','exchange_name','comission_percentage',
+        fields = ('datetime','currency_bought','currency_sold','amount_bought','exchange_name','commission_percentage',
         'buy_rate','is_maker','is_open')
         labels = {'currency_bought': _('Enter currency id'),'currency_sold': _('Enter currency id'),
         'amount':_('Enter the amount of currency you received')}
         help_texts = {'currency_bought': _('The currency id must be integreated into CoinAPI'),
-        'currency_bought': _('The currency id must be integreated into CoinAPI'),
+        'currency_sold': _('The currency id must be integreated into CoinAPI'),
         'buy_rate':_('How much one unit of currency bought costs compared to currency sold, i. e. 9800 for BTC/USD')}
+
+class PeriodForm(forms.ModelForm):
+    def clean_max_acts(self):
+        data = self.cleaned_data['max_acts']
+        if data<=0:
+            raise ValidationError(_('Not a valid amount of actives'))
+        return data
+
+    def clean_max_freq(self):
+        data = self.cleaned_data['max_freq']
+        if data<=0:
+            raise ValidationError(_('Not a valid amount of total operations'))
+        return data
+
+    def clean_max_simultenous(self):
+        data = self.cleaned_data['max_simultenous']
+        if data<=0:
+            raise ValidationError(_('Not a valid amount of open operations'))
+        return data
+
+    class Meta:
+        model = models.Period
+        fields = ('date_start','date_end','max_acts','acts_window','max_freq','max_simultenous','use_shoulder')
+        labels = {'max_acts': _('Max actives'),
+        'acts_window': _('Reset period'),
+        'max_freq':_('Max in period'),
+        'max_simultenous':_('Max simultenously open'),
+        'use_shoulder':_('Use of shoulder')}
+        help_texts = {'max_acts': _('How many actives will you own during the period'),
+        'acts_window': _('How frequently does the total operation limit reset'),
+        'max_freq':_('Limit on total operations in the period'),
+        'max_simultenous':_('Limit on open operations in the period'),
+        'use_shoulder':_('Whether the use of shoulder is allowed')}
 
     

@@ -11,6 +11,13 @@
 <body>
   <div class="container-fluid">
     <div class="row">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
       <div class="col-sm-2">
       {% block sidebar %}
         <ul class="sidebar-nav">
@@ -18,7 +25,10 @@
           {% if user.is_authenticated %}
           <li>User: {{ user.get_username }}</li>
           <li><a href="{% url 'trader_journal:profile' %}?next={{request.path}}">Profile</a></li>  
-          <li><a href="{% url 'trader_journal:logout' %}?next={{request.path}}">Logout</a></li>   
+          <li><a href="{% url 'trader_journal:logout' %}?next={{request.path}}">Logout</a></li>
+          <li><a href="{% url 'trader_journal:actives' %}">Your actives</a></li>   
+          <li><a href="{% url 'trader_journal:operations' %}">Your operations</a></li>   
+          <li><a href="{% url 'trader_journal:periods' %}">Your periods</a></li>   
           {% else %}
           <li><a href="{% url 'trader_journal:login' %}?next={{request.path}}">Login</a></li>   
           <li><a href="{% url 'trader_journal:register' %}?next={{request.path}}">Register</a></li>   

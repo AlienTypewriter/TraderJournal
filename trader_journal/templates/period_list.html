@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Period List</h1>
+  {% if period_list %}
+  <ul>
+    {% for period in period_list %}
+      <li>
+        <a href="{{ period.get_absolute_url }}">{{ period}}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>You haven't created any periods as of yet.</p>
+  {% endif %}       
+{% endblock %}

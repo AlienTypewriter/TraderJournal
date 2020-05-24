@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Active List</h1>
+  {% if active_list %}
+  <ul>
+    {% for active in active_list %}
+      <li>
+        <a href="{{ active.get_absolute_url }}">{{ active}}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>You haven't added any actives as of yet.</p>
+  {% endif %}       
+{% endblock %}
