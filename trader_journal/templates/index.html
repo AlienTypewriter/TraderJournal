@@ -8,8 +8,20 @@
     <li><strong>Total operations:</strong> {{ num_ops }}</li>
     {% if cur_period is not None %}
     <li><strong>Current period:</strong> {{ cur_period }}</li>
+    <li><strong>Profit from the current period:</strong> ${{cur_period.get_total_profit}}</li>
     {% else %}
     <li>Currently not in a period</li>
+    {% endif %}
+    {% if actives %}
+      <li>Total worth of all actives on the account: ${{total_worth}}</li>
+      <li>Of them initial: ${{initial_deposit}}</li>
+      <li>Profit: ${{profit_made}}</li>
+      <li>First five actives by amount</li>
+        <ul>
+          {% for active in actives %}
+            <li>{{active}}</li>
+          {% endfor %}
+        </uL>
     {% endif %}
   </ul>
 {% endblock %}

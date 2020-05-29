@@ -12,9 +12,9 @@ from multiprocessing import Process
 from . import conv
 
 
-def get_current_period():
+def get_current_period(user):
         try:
-                current_period=Period.objects.get(date_end__gte=date.today(),date_start__lte=date.today())
+                current_period=Period.objects.get(user_id=user,date_end__gte=date.today(),date_start__lte=date.today())
                 return current_period
         except ObjectDoesNotExist:
                 return None
@@ -81,11 +81,11 @@ class Operation(models.Model):
                 continue
             else:
                 if prev_rate<self.buy_rate():
-                    if rate>prev_rate:
+                    if rate/prev_rate>=1.02:
                         self.eventual_rate=prev_rate
                         break
                 else:
-                    if rate<prev_rate:
+                    if rate/prev_rate<=0.98:
                         self.eventual_rate=prev_rate
                         break
                 prev_rate = rate
@@ -102,9 +102,6 @@ class Operation(models.Model):
         return conv.get_from_api(query).get('rate')
 
     def __str__(self):
-        if self.eventual_rate is None:
-            p = Process(target=get_eventual_rate)
-            p.start()
         return f'{self.amount_sold} of {self.currency_sold} traded for {self.amount_bought} of {self.currency_bought}'
     
 class Period(models.Model):
@@ -120,10 +117,38 @@ class Period(models.Model):
     max_freq = models.PositiveSmallIntegerField()
     max_simultaneous = models.PositiveSmallIntegerField()
     use_shoulder = models.BooleanField(default=True)
-    limit_exceeded = models.BooleanField(default=False)
 
     def get_absolute_url(self):
         return reverse("trader_journal:period_detail", kwargs={"pk": self.pk})
 
+    def get_num_ops(self):
+        return Operation.objects.filter(user_id=self.user_id,datetime__gte=self.date_start,datetime__lte=self.date_end).count()
+
+    def get_num_ops_open(self):
+        return Operation.objects.filter(user_id=self.user_id,datetime__gte=self.date_start,datetime__lte=self.date_end,is_open=True).count()
+
+    def get_total_profit(self):
+        profit = 0
+        ops = Operation.objects.filter(user_id=self.user_id,datetime__gte=self.date_start,datetime__lte=self.date_end).all()
+        for op in ops:
+            profit+=op.get_profit()
+        return profit
+
+    def limit_exceeded(self):
+        ops = Operation.objects.filter(user_id=self.user_id,datetime__gte=self.date_start,datetime__lte=self.date_end).all()
+        for op in ops:
+            if self.acts_window=='D' and ops.filter(datetime__day=op.datetime.day).count()>self.max_freq:
+                return True
+            elif self.acts_window=='W' and ops.filter(datetime__week=op.datetime.week).count()>self.max_freq:
+                return True
+            elif self.acts_window=='M' and ops.filter(datetime__month=op.datetime.month).count()>self.max_freq:
+                return True
+        if self.get_num_ops_open()>self.max_simultaneous:
+            return True
+        if self.date_end>=date.today() and self.date_start<=date.today():
+            if Active.objects.filter(user_id=self.user_id).count()>self.max_acts:
+                return True
+        return False
+
     def __str__(self):
-        return f'Started at: {str(self.date_start)}, ends (or ended) at: {str(self.date_end)}' 
+        return f'Started at: {str(self.date_start)}, ends (or ended) at: {str(self.date_end)}'

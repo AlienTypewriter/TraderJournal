@@ -13,4 +13,5 @@
   {% else %}
     <p>You haven't added any actives as of yet.</p>
   {% endif %}       
+  <a href='{% url 'trader_journal:active_create'%}'><p>Add a new active.</p></a>   
 {% endblock %}

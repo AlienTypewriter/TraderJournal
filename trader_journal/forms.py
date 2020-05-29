@@ -18,12 +18,6 @@ class UserForm(forms.ModelForm):
         fields = ('username', 'email')
 
 class ActiveForm(forms.ModelForm):
-    def clean_amount(self):
-        data = self.cleaned_data['amount']
-        if data <= 0:
-            raise ValidationError(_('Insufficient amount'))
-        return data
-
     def clean_currency(self):
         data = self.cleaned_data['currency']
         if not conv.check_currency(data):
@@ -34,7 +28,8 @@ class ActiveForm(forms.ModelForm):
         model = models.Active
         fields = ('currency','amount','is_initial')
         labels = {'currency': _('Enter currency id'),'amount':_('Enter the amount of currency')}
-        help_texts = {'currency': _('The currency id must be integreated into CoinAPI')}
+        help_texts = {'currency': _('The currency id must be integreated into CoinAPI'),
+        'amount':_('You can enter negative amounts of actives to signify a net loss.')}
 
 
 class OperationForm(forms.ModelForm):
@@ -84,6 +79,12 @@ class OperationForm(forms.ModelForm):
         'currency_sold': _('The currency id must be integreated into CoinAPI')}
 
 class PeriodForm(forms.ModelForm):
+    def clean_date_end(self):
+        data = self.cleaned_data['date_end']
+        if data<self.cleaned_data['date_start']:
+            raise ValidationError(_('The period cannot end before starting'))
+        return data
+
     def clean_max_acts(self):
         data = self.cleaned_data['max_acts']
         if data<=0:

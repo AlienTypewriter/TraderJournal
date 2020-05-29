@@ -19,8 +19,8 @@ urlpatterns = [
     path('active/<int:pk>/delete/', views.ActiveDelete.as_view(), name='active_delete'),
     path('periods/',views.PeriodListView.as_view(),name='periods'),
     path('period/<int:pk>/', views.PeriodDetailView.as_view(), name='period_detail'),
-    path('period/create/', views.add_operation, name='period_create'),
-    path('period/<int:pk>/update/', views.OperationUpdate.as_view(), name='period_update'),
-    path('period/<int:pk>/delete/', views.OperationDelete.as_view(), name='period_delete'),
+    path('period/create/', views.add_period, name='period_create'),
+    path('period/<int:pk>/update/', views.PeriodUpdate.as_view(), name='period_update'),
+    path('period/<int:pk>/delete/', views.PeriodDelete.as_view(), name='period_delete'),
     path('accounts/',include('django.contrib.auth.urls'))
 ]

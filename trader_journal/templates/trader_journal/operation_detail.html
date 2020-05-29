@@ -9,6 +9,8 @@
   {% if operation.eventual_rate is not None %}
   <p><strong>The eventual rate of the operation:</strong> {{ operation.eventual_rate }}</p>
   <p><strong>Profit: </strong> {{operation.get_profit }}$</p>
+  {% else %}
+  <p>Current eventual rate is {{operation.get_eventual_rate}}</p>
   {% endif %}
   <p><strong>Were you the maker of the operation: </strong> {{ operation.is_maker }}</p>
   <p><strong>Is it still open: </strong> {{ operation.is_open }}</p>

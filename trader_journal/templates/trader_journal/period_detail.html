@@ -1,16 +1,24 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-  <h2>Operation that happened at: {{ operation.datetime }}</h2>
-  <p><strong>Bought:</strong> {{ operation.amount_bought }} {{operation.currency_bought }} </a></p>
-  <p><strong>For:</strong> {{ operation.amount_sold }} {{operation.currency_sold}}</p>
-  <p>At the <strong>{{ operation.exchange_name }}</strong> exchange.</p> 
-  <p><strong>The rate at the time of the operation:</strong> {{ operation.buy_rate }}</p>
-  {{ if operation.eventual_rate is not None }}
-  <p><strong>The rate at the time of the operation:</strong> {{ operation.buy_rate }}</p>
-  <p><strong>Profit: </strong> {{operation.get_profit }}
-  {{ endif }}
-  <p><strong>Were you the maker of the operation: </strong> {{ operation.is_maker }}</p>
-  <p><strong>Is it still open: </strong> {{ operation.is_open }}</p>
-  <a href='/active/{{operation.pk}}/update'><h4>Update operation info.</h4></a>
+  <h2>{{ period }}</h2>
+  <p><strong>Total number of operations within this period:</strong> {{ period.get_num_ops }}, of them open: {{period.get_num_ops_open}} </a></p>
+  <p><strong>Total profit in USD:</strong> {{ period.get_total_profit }}</p>
+  {% if period.limit_exceeded %}
+  <h4><strong>One of the limits for this period has been exceeded. Please edit the info or the limit.</strong></h4>
+  {% endif %}
+  <h3>Period settings:</h3>
+  <p><strong>Limit on all operations:</strong> {{ period.max_freq }}</p>
+  {% if period.acts_window == "D" %}
+  <p>Resets each day.</p>
+  {% elif period.acts_window == "W" %}
+  <p>Resets each week.</p>
+  {% else %}
+  <p>Resets each month.</p>
+  {% endif %}
+  <p><strong>Limit on open operations:</strong> {{ period.max_simultaneous }}</p>
+  <p><strong>Limit on the amount of actives:</strong> {{ period.max_acts }}</p>
+  <p><strong>Use of shoulder allowed: </strong> {{ period.use_shoulder }}</p>
+  <a href='{% url 'trader_journal:period_update' period.pk %}'><h4>Update period info.</h4></a>
+  <a href='{% url 'trader_journal:period_delete' period.pk %}'><h4>Delete this period.</h4></a>
 {% endblock %}

@@ -1,4 +1,3 @@
 .vscode/launch.json
 *.pyc
 db.sqlite3
-trader_journal/__pycache__/models.cpython-37.pyc
